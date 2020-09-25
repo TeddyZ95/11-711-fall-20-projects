@@ -13,7 +13,13 @@ def bag_of_words(text):
     :rtype: Counter
     '''
     
-    raise NotImplementedError
+    c = Counter()
+    res = text.split()
+    
+    for i in res:
+        c[i] += 1
+    
+    return c
 
 # deliverable 1.2
 def aggregate_counts(bags_of_words):
@@ -26,14 +32,16 @@ def aggregate_counts(bags_of_words):
     '''
 
     counts = Counter()
-    # YOUR CODE GOES HERE
+    
+    for i in bags_of_words:
+        counts += i
     
     return counts
 
 # deliverable 1.3
 def compute_oov(bow1, bow2):
     '''
-    Return a set of words that appears in bow1, but not bow2
+    Return a set of words that appears in bow1, but not bow2a
 
     :param bow1: a bag of words
     :param bow2: a bag of words
@@ -41,7 +49,12 @@ def compute_oov(bow1, bow2):
     :rtype: set
     '''
     
-    raise NotImplementedError
+    #convert counter to set
+    bow1 = set(bow1)
+    bow2 = set(bow2)
+    
+    return bow1.difference(bow2)
+    
 
 # deliverable 1.4
 def prune_vocabulary(training_counts, target_data, min_counts):
@@ -55,9 +68,22 @@ def prune_vocabulary(training_counts, target_data, min_counts):
     :rtype: list of Counters, set
     '''
     
-    raise NotImplementedError
+    #declare list for new_target_data
+    new_target_data = []
     
-    return target_data, vocab
+    #returns new counter of training counts thresholded by min_counts
+    new_training_counts = set([i for i in training_counts if training_counts[i] >= min_counts])
+    
+
+    #loops through to return pruned target_data & unique vocab
+    for i in target_data:
+        new_target_data.append(Counter({j:i[j] for j in i if j in new_training_counts}))
+        
+    #getting set of words in pruned vocabulary
+    vocab = set([(i, training_counts[i]) for i in new_training_counts])
+    
+    return new_target_data, vocab
+
 
 # deliverable 5.1
 def make_numpy(bags_of_words, vocab):
