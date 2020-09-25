@@ -21,8 +21,15 @@ def make_feature_vector(base_features,label):
     :rtype: dict
 
     '''
-
-    raise NotImplementedError
+    
+    feature_vector = {}
+    
+    for word, count in base_features.items():
+        feature_vector[(label, word)] = count
+    
+    feature_vector[(label,OFFSET)] = 1
+    
+    return feature_vector
 
 # deliverable 2.2
 def predict(base_features,weights,labels):
@@ -37,7 +44,23 @@ def predict(base_features,weights,labels):
 
     '''
     
-    raise NotImplementedError
+    #init predict labels
+    y = dict.fromkeys(labels, 0)
+    
+    #not super efficient / brute force loop to get the correct prediction
+    for label in labels:
+        for feature, count in base_features.items():
+            y[label] += count * weights[(label, feature)]
+        #add offset
+        y[label] += weights[(label, OFFSET)]
+    
+    #top_label = max(y, key=y.get)
+    
+    top_label = argmax(y)
+    
+    return top_label, y
+    
+    
 
 def predict_all(x,weights,labels):
     '''
