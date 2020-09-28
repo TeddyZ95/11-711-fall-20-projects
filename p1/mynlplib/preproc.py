@@ -97,7 +97,13 @@ def make_numpy(bags_of_words, vocab):
     '''
     vocab = sorted(vocab)
 
-    raise NotImplementedError
+    matrix = np.zeros((len(bags_of_words), len(vocab)))
+    
+    for i, j in enumerate(bags_of_words):
+        for (k, v) in enumerate(vocab):
+            matrix[i, k] = j[v[0]]
+    
+    return matrix
 
 
 ### helper code
