@@ -27,7 +27,14 @@ def compute_transition_weights(trans_counts, smoothing):
     
     all_tags = list(trans_counts.keys())+ [END_TAG]
     
-    raise NotImplementedError
+    for i in trans_counts:
+        tran = trans_counts[i]
+        total = len(list(tran.elements()))
+        for tag in all_tags:
+            if tag != START_TAG:
+                weights[(tag, i)] = np.log(tran[tag] + smoothing) - np.log(total + (len(all_tags) * smoothing))
+            else:
+                weights[(tag, i)] = -np.inf
     
     
     
@@ -55,9 +62,16 @@ def compute_weights_variables(nb_weights, hmm_trans_weights, vocab, word_to_ix, 
     tag_transition_probs = np.full((len(tag_to_ix), len(tag_to_ix)), -np.inf)
     emission_probs = np.full((len(vocab),len(tag_to_ix)), 0.0)
     
-    raise NotImplementedError
+    for tag_i in tag_to_ix:
+        for tag_j in tag_to_ix:
+                tag_transition_probs[tag_to_ix[tag_i], tag_to_ix[tag_j]] = hmm_trans_weights[(tag_i, tag_j)] if (tag_i, tag_j) in hmm_trans_weights else -np.inf
     
-    
+    for word in word_to_ix:
+        for tag_i in tag_to_ix:
+            default_val = 0
+            if tag_i == START_TAG or tag_i == END_TAG:
+                default_val = -np.inf
+            emission_probs[word_to_ix[word]][tag_to_ix[tag_i]] = nb_weights[(tag_i, word)] if (tag_i, word) in nb_weights else default_val    
     
     emission_probs_vr = Variable(torch.from_numpy(emission_probs.astype(np.float32)))
     tag_transition_probs_vr = Variable(torch.from_numpy(tag_transition_probs.astype(np.float32)))

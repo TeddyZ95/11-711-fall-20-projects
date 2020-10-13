@@ -26,9 +26,15 @@ def make_classifier_tagger(weights):
         :rtype: list
 
         """
-        raise NotImplementedError
         
-
+        tags = []
+        
+        for word in words: 
+            label, score = clf_base.predict({word:1},weights,list(all_tags))
+            tags.append(label)
+        
+        return tags
+            
 
     return classify
 

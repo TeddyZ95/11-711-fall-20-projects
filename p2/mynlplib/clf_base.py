@@ -22,7 +22,15 @@ def make_feature_vector(base_features,label):
     :rtype: dict
 
     """
-    raise NotImplementedError
+    
+    feature_vector = {}
+    
+    for word, count in base_features.items():
+        feature_vector[(label, word)] = count
+    
+    feature_vector[(label,OFFSET)] = 1
+    
+    return feature_vector
     
 
 # Deliverable 2.1 - can copy from P1
@@ -36,4 +44,15 @@ def predict(base_features,weights,labels):
     :rtype: string, dict
 
     """
-    raise NotImplementedError
+    
+    y = dict.fromkeys(labels, 0)
+    
+    for label in labels:
+        for feature, count in base_features.items():
+            y[label] += count * weights[(label, feature)]
+        #add offset
+        y[label] += weights[(label, OFFSET)]
+    
+    top_label = argmax(y)
+    
+    return top_label, y
