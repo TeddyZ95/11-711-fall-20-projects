@@ -15,7 +15,7 @@ def get_tag_word_counts(trainfile):
     """
     all_counters = defaultdict(lambda: Counter())
     
-    for (words, tags) in conll_seq_generator(trainfile):
+    for words, tags in conll_seq_generator(trainfile):
         for i in range(len(tags)):
             counter = all_counters.get(tags[i])
             if counter is None:
@@ -112,23 +112,11 @@ def get_most_common_word_weights(trainfile):
             counter[tags[j]]+=1
             all_counters[words[j]] = counter
     
-    for tag in all_counters:
-        sum_of_counters = sum(all_counters[tag].values())
-        
-        for label, count in all_counters[tag].items():
-            weights[(label, tag)] = count
+    for key in all_counters:
+        for label, count in all_counters[key].items():
+            weights[(label, key)] = count
         
     weights[('NOUN', OFFSET)] = 0.1
-
-#     for key in all_counters:
-
-#         counter = all_counters[key]
-#         counter_sum = sum(counter.values())
-
-#         for label,count in counter.items():
-#             weights[(label,key)] = (float(count))
-
-#     weights[('NOUN',OFFSET)] = 0.1
 
     
     return weights
@@ -146,7 +134,14 @@ def get_tag_trans_counts(trainfile):
     
     tot_counts = defaultdict(lambda : Counter())
     
-    raise NotImplementError
+    for words, tags in conll_seq_generator(trainfile):
+        for index, tag in enumerate(tags):
+            if index == 0:
+                tot_counts[START_TAG].update([tag])
+            if index == len(tags) - 1:
+                tot_counts[tag].update([END_TAG])
+            else:
+                tot_counts[tag].update([tags[index + 1]])    
     
 
     

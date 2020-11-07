@@ -48,8 +48,7 @@ def viterbi_step(all_tags, tag_to_ix, cur_tag_scores, transition_scores, prev_sc
         cur_tag_ix = tag_to_ix[cur_tag]
         curvec = prev_scores + transition_scores[cur_tag_ix, :] + cur_tag_scores[cur_tag_ix]
         best_tag = argmax(curvec)
-        viterbivars.append(prev_scores[0, best_tag] + transition_scores[cur_tag_ix, best_tag] +
-                           cur_tag_scores[cur_tag_ix])
+        viterbivars.append(prev_scores[0, best_tag] + transition_scores[cur_tag_ix, best_tag] + cur_tag_scores[cur_tag_ix])
 
         bptrs.append(best_tag)
         
@@ -89,20 +88,21 @@ def build_trellis(all_tags, tag_to_ix, cur_tag_scores, transition_scores):
     whole_bptrs = []
     for m in range(len(cur_tag_scores)):
         
-        prev_scores, bptrs = viterbi_step(all_tags, tag_to_ix, cur_tag_score, transition_scores, prev_scores)
+        prev_scores, bptrs = viterbi_step(all_tags, tag_to_ix, cur_tag_scores[m], transition_scores, prev_scores)
         prev_scores = torch.autograd.Variable(torch.from_numpy(np.array(prev_scores, dtype=np.float32))).view(1, -1)
         whole_bptrs.append(bptrs)
 
     best_path = []
-    best_last_index = argmax(prev_scores)
-    path_score = prev_scores[0, best_last_index] + transition_scores[tag_to_ix[END_TAG], best_last_index]
+    index = argmax(prev_scores)
+    path_score = prev_scores[0, index] + transition_scores[tag_to_ix[END_TAG], index]
 
     whole_bptrs.reverse()
     for bptrs in whole_bptrs:
-        best_path.append(ix_to_tag[best_last_index])
-        best_last_index = bptrs[best_last_index]
+        best_path.append(ix_to_tag[index])
+        index = bptrs[index]
 
-        
+    
+    best_path = list(reversed(best_path))
    
     # after you finish calculating the tags for all the words: don't forget to calculate the scores for the END_TAG
 

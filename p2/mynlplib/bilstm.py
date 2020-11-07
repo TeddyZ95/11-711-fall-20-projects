@@ -53,17 +53,16 @@ class BiLSTM(nn.Module):
         self.hidden2tag: fully connected layer
         """
         
-        raise NotImplementedError
-        #self.word_embeds = 
+        self.word_embeds = nn.Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim)
         
         if embeddings is not None:
             self.word_embeds.weight.data.copy_(torch.from_numpy(embeddings))
         
         # Maps the embeddings of the word into the hidden state
-        #self.lstm = 
+        self.lstm = nn.LSTM(input_size=embedding_dim, hidden_size=embedding_dim // 2, bidirectional=True)
 
         # Maps the output of the LSTM into tag space
-        #self.hidden2tag = 
+        self.hidden2tag = nn.Linear(in_features=hidden_dim,out_features=len(tag_to_ix), bias=True)
         
         
         self.hidden = self.init_hidden()
@@ -85,8 +84,13 @@ class BiLSTM(nn.Module):
         returns lstm_feats: scores for each tag for each token in the sentence.
         """
         self.hidden = self.init_hidden()
+        slen = len(sentence)
         
-        raise NotImplementedError
+        word_embed = self.word_embeds(sentence).view(slen, 1, self.embedding.dim)
+        feedback, self.hidden = self.lstm(word_embed, self.hidden)
+        lstm_feats = self.hidden2tag(feedback).view(slen, -1)
+        
+        return lstm_feats
         
     
     
@@ -145,14 +149,22 @@ class BiLSTM_CRF(BiLSTM):
         init_vec[0][self.tag_to_ix[START_TAG]] = 0.
         
         prev_scores = torch.autograd.Variable(init_vec)
-        
-
-        raise NotImplementedError
        
         for feat in feats:
             alphas=[]
-            for next_tag in range(self.tagset_size):
-                pass
+            for next in range(self.tagset_size):
+                escore = feat[next].view(1, -1).expand(1, self.tagset_size)
+                tscore = self.transitions[next].view(1, -1)
+                tagvar = prev_scores + tscore + escore
+                alphas.append(log_sum_exp(tagvar))
+            prev_scores = torch.cat(alphas).view(1, -1)
+            
+        endvar = prev_scores + self.transitions[self.tag_to_ix[END_TAG]]
+        alpha = log_sum_exp(endvar)
+        
+        
+        
+        return alpha
 
     
     def score_sentence(self, feats, gold_tags):
@@ -171,7 +183,9 @@ class BiLSTM_CRF(BiLSTM):
         # adding the START_TAG here
         tags = torch.cat([Variable(torch.LongTensor([self.tag_to_ix[START_TAG]])), gold_tags])
         
-        raise NotImplementedError
+        for i, feat in enumerate(feats):
+            score = score + self.transitions[tags[i + 1], tags[i]] + feat[tags[i + 1]]
+        score = score + self.transitions[self.tag_to_ix[END_TAG]][tags[-1]]
         
         return score
     
@@ -189,7 +203,9 @@ class BiLSTM_CRF(BiLSTM):
         all_tags = [tag for tag,value in self.tag_to_ix.items()]
         
         # call the viterbi algorithm here
-        raise NotImplementedError
+        _, path = viterbi.build_trellis(all_tags, self.tag_to_ix, lstm_feats, self.transitions)
+        
+        return path
 
 
     def neg_log_likelihood(self, lstm_feats, gold_tags):
@@ -204,7 +220,13 @@ class BiLSTM_CRF(BiLSTM):
         You should use the previous functions defined: forward_alg, score_sentence
         """
         
-        raise NotImplementedError
+        fscore = self.forward_alg(lstm_feats)
+        tscore = self.score_sentence(lstm_feats, gold_tags)
+        
+        negll = fscore - tscore
+        
+        return negll     
+
 
 
 

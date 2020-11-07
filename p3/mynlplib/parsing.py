@@ -156,7 +156,15 @@ class ParserState:
         """
         # STUDENT
         # hint: use list.pop() to get and remove the left and right items
-        raise NotImplementedError
+        
+        shead = self.stack.pop(-1)
+        bhead = self.stack.pop(0)
+        
+        if action == Actions.ARC_R:
+            return bhead, shead
+        elif action == Actions.ARC_R:
+            return shead, bhead
+            
 
         # END STUDENT
 
