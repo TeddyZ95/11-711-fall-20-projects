@@ -23,6 +23,12 @@ class FFCoref(nn.Module):
         
         # STUDENT
 
+        self.feat_names = feat_names
+        self.net = nn.Sequential(
+            nn.Linear(len(self.feat_names), hidden_dim),
+            nn.Tanh(),
+            nn.Linear(hidden_dim, 1))
+        
         # END STUDENT
         
         
@@ -33,7 +39,7 @@ class FFCoref(nn.Module):
         :returns: model score
         :rtype: 1x1 torch Variable
         '''
-        raise NotImplementedError
+        return self.net(ag.Variable(torch.FloatTensor([features[feature] for feature in self.feat_names])))
 
         
     ## deliverable 3.3
@@ -47,8 +53,14 @@ class FFCoref(nn.Module):
         :returns: list of scores for all candidates
         :rtype: torch.FloatTensor of dimensions 1x(i+1)
         '''
-        raise NotImplementedError
+        scores = ag.Variable(torch.FloatTensor(1, i + 1))
 
+        for ant_index, ant in enumerate(markables[:i + 1]):
+            feature = feats(markables, ant_index, i)
+            score_var = self.forward(feature)
+            scores[0, ant_index] = score_var[0]
+
+        return scores
 
     ## deliverable 3.4
     def instance_top_scores(self, markables, feats, i, true_antecedent):
@@ -62,9 +74,26 @@ class FFCoref(nn.Module):
         :returns trues_max: best-scoring true antecedent
         :returns false_max: best-scoring false antecedent
         '''
-        scores = self.score_instance(markables, feats, i)
-        
-        raise NotImplementedError
+        if i == 0 or i == true_antecedent:
+            return None, None
+        else:
+            scores = self.score_instance(markables, feats, i)
+
+            all_trues_indices = torch.LongTensor(
+                [index for index in range(0, i) if markables[index].entity == markables[i].entity])
+            all_false_indices = torch.LongTensor(
+                [index for index in range(0, i) if markables[index].entity != markables[i].entity])
+
+            if not all_trues_indices.shape:
+                all_trues_indices = torch.LongTensor([i])
+
+            if all_trues_indices.shape[0] == i:
+                return None, None
+
+            zero_tensor = torch.LongTensor([0])
+            trues_max_val = torch.max(scores[zero_tensor, all_trues_indices])
+            false_max_val = torch.max(scores[zero_tensor, all_false_indices])
+            return trues_max_val, false_max_val
 
 
 def train(model, optimizer, markable_set, feats, margin=1.0, epochs=2):

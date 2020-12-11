@@ -16,7 +16,22 @@ def minimal_features(markables,a,i):
     
     f = defaultdict(float)
     # STUDENT
+    
+    m_a = markables[a]
+    m_i = markables[i]
 
+    if a == i:
+        f["new-entity"] = 1
+    else:
+        if coref_rules.exact_match(m_a, m_i):
+            f["exact-match"] = 1
+        if coref_rules.match_last_token(m_a, m_i):
+            f["last-token-match"] = 1
+        if coref_rules.match_on_content(m_a, m_i):
+            f["content-match"] = 1
+        if m_a.start_token <= m_i.start_token <= m_a.end_token or m_i.start_token <= m_a.start_token <= m_i.end_token:
+            f["crossover"] = 1
+            
     # END STUDENT
     return f
 
@@ -38,7 +53,17 @@ def distance_features(x,a,i,
     
     f = defaultdict(float)
     # STUDENT
+    if a == i:
+        return f
+    else:
+        mention_dist = min(abs(i - a), max_mention_distance)
+        token_dist = min(abs(x[i].start_token - x[a].end_token), max_token_distance)
+        if mention_dist > 0:
+            f["mention-distance-{}".format(mention_dist)] = 1
 
+        if token_dist > 0:
+            f["token-distance-{}".format(token_dist)] = 1
+        return f
     # END STUDENT
     return f
 
@@ -51,7 +76,14 @@ def make_feature_union(feat_func_list):
     :returns: feature function
     :rtype: function
     '''
-    raise NotImplementedError
+    
+    def union_func(x, a, i):
+        f = defaultdict(float)
+        for feat_func in feat_func_list:
+            f.update(feat_func(x, a, i))
+        return f
+
+    return union_func
 
 
 ## deliverable 6

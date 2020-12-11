@@ -20,7 +20,9 @@ def get_markables_for_entity(markables, entity):
     :returns: all markables corresponding to a given entity
     :rtype: list
     '''
-    raise NotImplementedError
+    mlist = [" ".join(markable.string) for markable in markables if markable.entity == entity]
+    
+    return mlist
 
 
 ## deliverable 1.2
@@ -33,8 +35,19 @@ def get_distances(markables, string):
     :returns: integer distances
     :rtype: list
     '''
-    raise NotImplementedError
+    
+    distances = []
+    for index, markable in enumerate(markables):
+        if " ".join(markable.string).lower() == string.lower():
+            for jindex in range(index - 1, 0, -1):
+                if markable.entity == markables[jindex].entity:
+                    distances.append(index - jindex)
+                    break
 
+    if len(distances) == 0:
+        distances = [0]
+    
+    return distances
 
 ## Deliverable 2.1
 def get_tp(pred_ant, markables):
@@ -45,7 +58,14 @@ def get_tp(pred_ant, markables):
     :param markables: list of markables
     :returns: list of booleans
     '''
-    raise NotImplementedError
+    arr = []
+    for i, ant in enumerate(pred_ant):
+        value = False
+        if i > ant and markables[i].entity == markables[ant].entity:
+            value = True
+        arr.append(value)
+
+    return arr
 
 
 ## Deliverable 2.1
@@ -57,7 +77,14 @@ def get_fp(pred_ant, markables):
     :param markables: list of markables
     :returns: list of booleans
     '''
-    raise NotImplementedError
+    arr = []
+    for i, ant in enumerate(pred_ant):
+        value = False
+        if i > ant and markables[i].entity != markables[ant].entity:
+            value = True
+        arr.append(value)
+
+    return arr
 
 
 ## Deliverable 2.1
@@ -69,7 +96,25 @@ def get_fn(pred_ant, markables):
     :param markables: list of markables
     :returns: list of booleans
     '''
-    raise NotImplementedError
+    arr = []
+    entities = get_entities(markables)
+
+    markable_to_entity_index_map = {}
+    for i, markable_set in enumerate(entities):
+        for markable in markable_set:
+            markable_to_entity_index_map[markable] = i
+
+    for i, ant in enumerate(pred_ant):
+        value = False
+        my_entity_index = markable_to_entity_index_map[i]
+        others = entities[my_entity_index]
+        others = [other for other in others if i >= other]
+        # print("A:{},O:{},Ol:{}".format(ant, entities[my_entity_index], others))
+        if len(others) > 1 and (ant not in others or i == ant):
+            value = True
+        arr.append(value)
+
+    return arr
 
 
 def recall(pred_ant, markables):

@@ -34,7 +34,7 @@ def singleton_matcher(m_a, m_i):
     :returns: 
     :rtype: boolean
     '''
-    raise NotImplementedError
+    return m_a.start_token == m_i.start_token and m_a.end_token == m_i.end_token
 
 
 # deliverable 2.2
@@ -47,7 +47,7 @@ def full_cluster_matcher(m_a, m_i):
     :returns: 
     :rtype: boolean
     '''
-    raise NotImplementedError
+    return True
 
 
 # deliverable 2.3
@@ -60,7 +60,7 @@ def exact_match_no_pronouns(m_a, m_i):
     :returns: True if the strings are identical and are not pronouns
     :rtype: boolean
     '''
-    raise NotImplementedError
+    return downcase_list(m_a.string) == downcase_list(m_i.string) and not ("".join(m_a.string).lower() in pronouns)
 
 # deliverable 2.4
 def match_last_token(m_a, m_i):
@@ -71,7 +71,7 @@ def match_last_token(m_a, m_i):
     :param m_i: referent markable
     :rtype: boolean
     '''
-    raise NotImplementedError
+    return m_a.string[-1].lower() == m_i.string[-1].lower()
 
 # deliverable 2.5
 def match_last_token_no_overlap(m_a, m_i):
@@ -83,7 +83,11 @@ def match_last_token_no_overlap(m_a, m_i):
     :returns: True if final tokens match and strings do not overlap
     :rtype: boolean
     '''
-    raise NotImplementedError
+    
+    overlap = not (m_i.start_token <= m_a.start_token <= m_i.end_token) and \
+           not (m_a.start_token <= m_i.start_token <= m_a.end_token)
+    
+    return match_last_token(m_a, m_i) and overlap
 
 # deliverable 2.6
 def match_on_content(m_a, m_i):
@@ -95,7 +99,14 @@ def match_on_content(m_a, m_i):
     :returns: True if all match on all "content words" (defined by POS tag) and markables do not overlap
     :rtype: boolean
     '''
-    raise NotImplementedError
+    ALLOWED_TAGS = ['CD', 'NN', 'NNS', 'NNP', 'NNPS', 'PRP', 'PRP$', 'JJ', 'JJR', 'JJS']
+
+    filtered_ma_s = [token for i, token in enumerate(m_a.string) if m_a.tags[i] in ALLOWED_TAGS]
+    filtered_mi_s = [token for i, token in enumerate(m_i.string) if m_i.tags[i] in ALLOWED_TAGS]
+
+    return not (m_i.start_token <= m_a.start_token <= m_i.end_token) and \
+           not (m_a.start_token <= m_i.start_token <= m_a.end_token) and \
+           downcase_list(filtered_ma_s) == downcase_list(filtered_mi_s)
     
     
 ########## helper code

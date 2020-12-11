@@ -32,5 +32,11 @@ def initialize_with_pretrained(pretrained_embeds, word_embedding, use_cuda=False
         of that word)
     :param word_embedding: The network component to initialize (i.e, a BiLSTMWordEmbedding)
     '''
-    raise NotImplementedError
+    unknown_embed = pretrained_embeds[UNK_TOKEN]
+
+    for word in word_embedding.word_to_ix:
+        emb = unknown_embed
+        if word in pretrained_embeds:
+            emb = pretrained_embeds[word]
+        word_embedding.word_embeddings.weight.data[word_embedding.word_to_ix[word]] = torch.FloatTensor(emb)
 
